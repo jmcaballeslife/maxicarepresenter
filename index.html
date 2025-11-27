@@ -55,18 +55,21 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             border: 1px solid rgba(255,255,255,0.1);
+            container-type: inline-size; /* CRITICAL: Enables responsive font scaling based on card width */
         }
         .mymax-overlay {
             background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%);
         }
 
-        .card-annual-price { font-size: 1.5rem; line-height: 1; font-weight: 800; }
-        .card-semiannual-price { font-size: 0.95rem; line-height: 1; font-weight: 600; opacity: 0.9; }
-        .card-price-label { font-size: 0.65rem; opacity: 0.8; font-weight: 500; margin-left: 2px; text-transform: uppercase; }
+        /* Responsive Fonts using cqw (Container Query Width) */
+        .card-annual-price { font-size: 6.5cqw; line-height: 0.9; font-weight: 800; letter-spacing: -0.03em; }
+        .card-semiannual-price { font-size: 3.5cqw; line-height: 1; font-weight: 600; opacity: 0.95; }
+        .card-price-label { font-size: 2.2cqw; opacity: 0.8; font-weight: 500; margin-left: 0.5cqw; text-transform: uppercase; }
+        .card-note { font-size: 2.2cqw; font-weight: 500; color: #fef3c7; opacity: 0.9; letter-spacing: 0.02em; line-height: 1.1; }
         
-        .card-benefits-text { font-size: 0.8rem; line-height: 1.4; font-weight: 500; }
-        .card-benefits-text li { margin-bottom: 4px; display: flex; align-items: center; }
-        .card-benefits-text li::before { content: '✓'; margin-right: 6px; color: #4ade80; font-weight: bold; }
+        .card-benefits-text { font-size: 3.2cqw; line-height: 1.35; font-weight: 500; }
+        .card-benefits-text li { margin-bottom: 1cqw; display: flex; align-items: center; }
+        .card-benefits-text li::before { content: '✓'; margin-right: 1.5cqw; color: #4ade80; font-weight: bold; }
 
         /* Modal Content Styling */
         .details-modal-content h4 { font-weight: 800; color: #1e3a8a; margin-top: 1.25rem; margin-bottom: 0.75rem; font-size: 1.1rem; }
@@ -1022,6 +1025,14 @@
             return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 0 }).format(amount);
         }
 
+        // New function specifically for formatting monthly rates to #.#k
+        function formatMonthlyK(amount) {
+            if (isNaN(amount) || amount === null) return 'N/A';
+            const kValue = amount / 1000;
+            // Round to 1 decimal place
+            return '₱' + kValue.toFixed(1) + 'k';
+        }
+
         // --- BROCHURE GENERATOR LOGIC ---
         async function generateBrochure(title, id, type) {
             const container = document.getElementById('brochure-container');
@@ -1194,11 +1205,17 @@
                 let tableRows = '';
                 const plans = ['silver', 'gold', 'platinum', 'platinumPlus'];
                 
+                // MBL Note Logic for Brochure
+                const mblNote = isFamily 
+                    ? `<br><span class="text-[8px] font-normal italic text-slate-500">(per member/illness/year)</span>` 
+                    : '';
+
                 plans.forEach(planKey => {
                     const staticData = myMaxicareStaticData[planKey];
                     let annualPrice = (currentQuote && currentQuote[planKey] > 0) ? formatCurrency(currentQuote[planKey]) : staticData.price_desc;
                     let semiAnnualPrice = (currentSemiQuote && currentSemiQuote[planKey] > 0) ? formatCurrency(currentSemiQuote[planKey]) : 'N/A';
-                    let monthlyPrice = (currentMonthlyQuote && currentMonthlyQuote[planKey] > 0) ? formatCurrency(currentMonthlyQuote[planKey]) : 'N/A';
+                    // Use formatMonthlyK for the brochure table as requested
+                    let monthlyPrice = (currentMonthlyQuote && currentMonthlyQuote[planKey] > 0) ? formatMonthlyK(currentMonthlyQuote[planKey]) : 'N/A';
                     
                     // If static desc is used for annual, represent semi as '---'
                     if(annualPrice.includes('Starts')) {
@@ -1209,7 +1226,7 @@
                     tableRows += `
                         <tr class="border-b border-slate-100 hover:bg-slate-50">
                             <td class="py-2 pl-2 font-bold text-blue-900 text-sm">${staticData.name}</td>
-                            <td class="py-2 text-slate-600 text-xs">${staticData.mbl.replace('k',',000')}</td>
+                            <td class="py-2 text-slate-600 text-xs">${staticData.mbl.replace('k',',000')}${mblNote}</td>
                             <td class="py-2 text-slate-600 text-xs">${staticData.room}</td>
                             <td class="py-2 font-bold text-right text-slate-800 text-sm">${annualPrice}</td>
                             <td class="py-2 font-medium text-right text-slate-500 text-xs pr-2">${semiAnnualPrice}</td>
@@ -1530,8 +1547,6 @@
                     semiAnnualTotals.platinumPlus += semiRates.platinumPlus + semiAnnualRiderCost;
 
                     // Monthly Calculation: Annual / 10
-                    // Note: Riders are also included in annual cost before division? 
-                    // Usually riders are part of the total premium. Assuming yes.
                     monthlyTotals.silver += (annualRates.silver + annualRiderCost) / 10;
                     monthlyTotals.gold += (annualRates.gold + annualRiderCost) / 10;
                     monthlyTotals.platinum += (annualRates.platinum + annualRiderCost) / 10;
@@ -1547,10 +1562,11 @@
             currentSemiQuote = semiAnnualTotals; 
             currentMonthlyQuote = monthlyTotals;
             currentActiveRiders = activeRiders; 
-            renderPlanGrid(annualTotals, semiAnnualTotals, monthlyTotals, valid, activeRiders);
+            // PASSED isFamily to renderPlanGrid
+            renderPlanGrid(annualTotals, semiAnnualTotals, monthlyTotals, valid, activeRiders, isFamily);
         }
 
-        function renderPlanGrid(annualTotals, semiAnnualTotals, monthlyTotals, valid, activeRiders) {
+        function renderPlanGrid(annualTotals, semiAnnualTotals, monthlyTotals, valid, activeRiders, isFamily) {
             const plans = [
                 { key: 'silver', name: 'Silver', mbl: '100k', room: 'Semi-Private', bg: 'https://i.imgur.com/AZayUDB.png' },
                 { key: 'gold', name: 'Gold', mbl: '150k', room: 'Regular Private', bg: 'https://i.imgur.com/VLmnPq4.png' },
@@ -1576,43 +1592,53 @@
                 
                 myMaxicareDetails[p.key] = planSpecificContent;
                 
+                // MBL Note Logic
+                const mblNote = isFamily 
+                    ? `<div class="text-[2.2cqw] font-normal opacity-90 italic leading-none mt-[0.2cqw]">(per member/illness/year)</div>` 
+                    : '';
+
                 return `
                 <div class="mymax-card product-card hover:scale-[1.01] transition-transform duration-300" style="background-image: url('${p.bg}');">
-                    <!-- Pricing Top Left -->
-                    <div class="absolute flex flex-col justify-center text-shadow" style="top: 18%; left: 5%; width: 85%; height: 22%;">
-                        <div>
+                    <!-- Pricing Top Left (Adjusted Position & Responsive) -->
+                    <div class="absolute flex flex-col justify-center text-shadow" style="top: 15%; left: 6%; width: 85%; height: 25%;">
+                        <div class="mb-[1cqw]">
                             <span class="card-annual-price">${valid ? formatCurrency(annualTotals[p.key]) : '₱--,--'}</span>
                             <span class="card-price-label">/year</span>
                         </div>
-                        <div class="-mt-1 flex items-baseline gap-2">
+                        <div class="flex items-baseline gap-[1.5cqw] mb-[1cqw]">
                             <div>
-                                <span class="card-semiannual-price text-gray-200">${valid ? formatCurrency(semiAnnualTotals[p.key]) : '₱--,--'}</span>
+                                <span class="card-semiannual-price text-gray-100">${valid ? formatCurrency(semiAnnualTotals[p.key]) : '₱--,--'}</span>
                                 <span class="card-price-label">/sem</span>
                             </div>
                             <div class="relative group">
-                                <span class="card-semiannual-price text-yellow-300 border-b border-dashed border-yellow-300/50 cursor-help">${valid ? formatCurrency(monthlyTotals[p.key]) : '₱--,--'}</span>
+                                <span class="card-semiannual-price text-yellow-300 border-b border-dashed border-yellow-300/50 cursor-help">${valid ? formatMonthlyK(monthlyTotals[p.key]) : '₱--,--'}</span>
                                 <span class="card-price-label text-yellow-100">/mo*</span>
                             </div>
                         </div>
-                        <div class="text-[0.55rem] font-medium text-yellow-100 mt-0.5 opacity-90 tracking-wide">*Exclusive to BPI/Metro CC (12 mos)</div>
+                        <div class="card-note">*Exclusive to BPI/Metro CC (12 mos)</div>
                     </div>
 
-                    <!-- Benefits Bottom Left -->
-                    <div class="absolute flex flex-col justify-start text-shadow" style="top: 53%; left: 5%; width: 50%; height: 40%;">
-                        <ul class="card-benefits-text list-none p-0 space-y-0.5">
-                            <li><span class="font-bold">Benefit Limit:</span> ₱${p.mbl}</li>
+                    <!-- Benefits Bottom Left (Responsive) -->
+                    <div class="absolute flex flex-col justify-start text-shadow" style="top: 55%; left: 6%; width: 55%; height: 40%;">
+                        <ul class="card-benefits-text list-none p-0 space-y-0">
+                            <li>
+                                <div class="flex flex-col">
+                                    <span><span class="font-bold">Benefit Limit:</span> ₱${p.mbl}</span>
+                                    ${mblNote}
+                                </div>
+                            </li>
                             <li><span class="font-bold">Room:</span> ${p.room}</li>
                             <li>In-Patient, Out-Patient & ER</li>
                             <li>Annual Check-up (ACU)</li>
                         </ul>
-                        <div class="mt-1 pt-1 border-t border-white/30 text-[0.65rem] font-medium text-blue-100">
+                        <div class="mt-[1cqw] pt-[1cqw] border-t border-white/30 text-[2.5cqw] font-medium text-blue-100">
                             ${ridersText}
                         </div>
                     </div>
                     
-                    <!-- Action Buttons Bottom Right -->
-                    <div class="absolute bottom-24 right-4 z-20">
-                        <button onclick="showDetails('MyMaxicare ${p.name}', '${p.key}')" class="bg-white/10 hover:bg-white/30 backdrop-blur-md rounded-full px-5 py-2 text-xs font-bold border border-white/40 transition-all shadow-lg text-white tracking-wide">View Details</button>
+                    <!-- Action Buttons - Moved UP to align with price area (Responsive) -->
+                    <div class="absolute top-[38%] right-[7%] z-20">
+                        <button onclick="showDetails('MyMaxicare ${p.name}', '${p.key}')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-2xl px-[3cqw] py-[1.5cqw] text-[2.5cqw] font-bold border border-white/40 transition-all shadow-lg text-white tracking-wide">View Details</button>
                     </div>
                 </div>
             `}).join('');
