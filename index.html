@@ -16,8 +16,6 @@
             -webkit-font-smoothing: antialiased; 
             padding-bottom: 120px; 
             min-height: 100vh;
-            /* Removed overflow-hidden to allow scrolling once logged in, 
-               login overlay handles blocking interaction via pointer-events */
         }
         
         /* iPad Scrollbar Hiding */
@@ -199,10 +197,6 @@
         .feature-row td { border-bottom: 1px solid #f1f5f9; }
         .feature-row:nth-child(even) { background-color: #f8fafc; }
         
-        /* Ensure overlay blocks interaction but lets body scroll if content is long (though we usually lock body) */
-        /* Actually, standard practice is to lock body scroll when modal is open. */
-        /* Since user said "di maka scroll", likely body overflow hidden was set initially. */
-        /* We will set it initially, then remove on login. */
         body.locked { overflow: hidden; }
     </style>
 </head>
@@ -873,7 +867,8 @@
         // --- STATE MANAGEMENT ---
         let familyMembers = []; 
         let currentQuote = {}; 
-        let currentSemiQuote = {}; 
+        let currentSemiQuote = {};
+        let currentMonthlyQuote = {}; 
         let currentActiveRiders = []; 
 
         // --- INITIALIZATION ---
@@ -1185,9 +1180,13 @@
                     const staticData = myMaxicareStaticData[planKey];
                     let annualPrice = (currentQuote && currentQuote[planKey] > 0) ? formatCurrency(currentQuote[planKey]) : staticData.price_desc;
                     let semiAnnualPrice = (currentSemiQuote && currentSemiQuote[planKey] > 0) ? formatCurrency(currentSemiQuote[planKey]) : 'N/A';
+                    let monthlyPrice = (currentMonthlyQuote && currentMonthlyQuote[planKey] > 0) ? formatCurrency(currentMonthlyQuote[planKey]) : 'N/A';
                     
                     // If static desc is used for annual, represent semi as '---'
-                    if(annualPrice.includes('Starts')) semiAnnualPrice = '---';
+                    if(annualPrice.includes('Starts')) {
+                        semiAnnualPrice = '---';
+                        monthlyPrice = '---';
+                    }
 
                     tableRows += `
                         <tr class="border-b border-slate-100 hover:bg-slate-50">
@@ -1196,6 +1195,7 @@
                             <td class="py-2 text-slate-600 text-xs">${staticData.room}</td>
                             <td class="py-2 font-bold text-right text-slate-800 text-sm">${annualPrice}</td>
                             <td class="py-2 font-medium text-right text-slate-500 text-xs pr-2">${semiAnnualPrice}</td>
+                            <td class="py-2 font-medium text-right text-blue-600 text-xs pr-2 font-bold">${monthlyPrice}</td>
                         </tr>
                     `;
                 });
@@ -1217,12 +1217,14 @@
                                     <th class="py-1.5">Room</th>
                                     <th class="py-1.5 text-right">Annual</th>
                                     <th class="py-1.5 text-right pr-2">Semi-Annual</th>
+                                    <th class="py-1.5 text-right pr-2">Monthly*</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${tableRows}
                             </tbody>
                         </table>
+                        <div class="mt-1 text-[10px] text-slate-500 italic">* Monthly rate is <b>exclusive to BPI & Metrobank Credit Cards</b> (0% Interest, 12 months). Formula: Annual / 10.</div>
                         ${ridersNote}
                     </div>
                     ${myMaxicareGeneralDetails}
@@ -1489,6 +1491,8 @@
 
             let annualTotals = { silver: 0, gold: 0, platinum: 0, platinumPlus: 0 };
             let semiAnnualTotals = { silver: 0, gold: 0, platinum: 0, platinumPlus: 0 };
+            let monthlyTotals = { silver: 0, gold: 0, platinum: 0, platinumPlus: 0 };
+
             let valid = ages.length > 0;
             let useFamilyRate = isFamily && ages.length >= 2;
 
@@ -1506,6 +1510,15 @@
                     semiAnnualTotals.gold += semiRates.gold + semiAnnualRiderCost;
                     semiAnnualTotals.platinum += semiRates.platinum + semiAnnualRiderCost;
                     semiAnnualTotals.platinumPlus += semiRates.platinumPlus + semiAnnualRiderCost;
+
+                    // Monthly Calculation: Annual / 10
+                    // Note: Riders are also included in annual cost before division? 
+                    // Usually riders are part of the total premium. Assuming yes.
+                    monthlyTotals.silver += (annualRates.silver + annualRiderCost) / 10;
+                    monthlyTotals.gold += (annualRates.gold + annualRiderCost) / 10;
+                    monthlyTotals.platinum += (annualRates.platinum + annualRiderCost) / 10;
+                    monthlyTotals.platinumPlus += (annualRates.platinumPlus + annualRiderCost) / 10;
+
                 } else {
                     valid = false;
                 }
@@ -1513,12 +1526,13 @@
             
             // Store current calculated annual totals globally for brochure use
             currentQuote = annualTotals;
-            currentSemiQuote = semiAnnualTotals; // Added semi-annual quote storage
-            currentActiveRiders = activeRiders; // Added rider storage
-            renderPlanGrid(annualTotals, semiAnnualTotals, valid, activeRiders);
+            currentSemiQuote = semiAnnualTotals; 
+            currentMonthlyQuote = monthlyTotals;
+            currentActiveRiders = activeRiders; 
+            renderPlanGrid(annualTotals, semiAnnualTotals, monthlyTotals, valid, activeRiders);
         }
 
-        function renderPlanGrid(annualTotals, semiAnnualTotals, valid, activeRiders) {
+        function renderPlanGrid(annualTotals, semiAnnualTotals, monthlyTotals, valid, activeRiders) {
             const plans = [
                 { key: 'silver', name: 'Silver', mbl: '100k', room: 'Semi-Private', bg: 'https://i.imgur.com/AZayUDB.png' },
                 { key: 'gold', name: 'Gold', mbl: '150k', room: 'Regular Private', bg: 'https://i.imgur.com/VLmnPq4.png' },
@@ -1547,15 +1561,22 @@
                 return `
                 <div class="mymax-card product-card hover:scale-[1.01] transition-transform duration-300" style="background-image: url('${p.bg}');">
                     <!-- Pricing Top Left -->
-                    <div class="absolute flex flex-col justify-center text-shadow" style="top: 18%; left: 5%; width: 48%; height: 20%;">
+                    <div class="absolute flex flex-col justify-center text-shadow" style="top: 18%; left: 5%; width: 85%; height: 22%;">
                         <div>
                             <span class="card-annual-price">${valid ? formatCurrency(annualTotals[p.key]) : '₱--,--'}</span>
                             <span class="card-price-label">/year</span>
                         </div>
-                        <div class="-mt-1">
-                            <span class="card-semiannual-price text-gray-200">${valid ? formatCurrency(semiAnnualTotals[p.key]) : '₱--,--'}</span>
-                            <span class="card-price-label">/sem</span>
+                        <div class="-mt-1 flex items-baseline gap-2">
+                            <div>
+                                <span class="card-semiannual-price text-gray-200">${valid ? formatCurrency(semiAnnualTotals[p.key]) : '₱--,--'}</span>
+                                <span class="card-price-label">/sem</span>
+                            </div>
+                            <div class="relative group">
+                                <span class="card-semiannual-price text-yellow-300 border-b border-dashed border-yellow-300/50 cursor-help">${valid ? formatCurrency(monthlyTotals[p.key]) : '₱--,--'}</span>
+                                <span class="card-price-label text-yellow-100">/mo*</span>
+                            </div>
                         </div>
+                        <div class="text-[0.55rem] font-medium text-yellow-100 mt-0.5 opacity-90 tracking-wide">*Exclusive to BPI/Metro CC (12 mos)</div>
                     </div>
 
                     <!-- Benefits Bottom Left -->
