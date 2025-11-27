@@ -62,9 +62,9 @@
         }
 
         /* Responsive Fonts using cqw (Container Query Width) */
-        .card-annual-price { font-size: 6.5cqw; line-height: 0.7; font-weight: 800; letter-spacing: -0.03em; }
+        .card-annual-price { font-size: 7.5cqw; line-height: 0.8; font-weight: 800; letter-spacing: -0.03em; }
         .card-semiannual-price { font-size: 3.5cqw; line-height: 1; font-weight: 600; opacity: 0.95; }
-        .card-price-label { font-size: 2.2cqw; opacity: 0.8; font-weight: 500; margin-left: 0.5cqw; text-transform: uppercase; }
+        .card-price-label { font-size: 2.2cqw; opacity: 0.8; font-weight: 500; margin-left: 0.3cqw; text-transform: uppercase; }
         .card-note { font-size: 2.2cqw; font-weight: 500; color: #fef3c7; opacity: 0.9; letter-spacing: 0.02em; line-height: 1.1; }
         
         .card-benefits-text { font-size: 3.2cqw; line-height: 1.35; font-weight: 500; }
@@ -787,9 +787,9 @@
 
         // --- GLOBAL PRODUCT DATA ---
         const primaProducts = [
-            { id: 'prima_consult', name: 'PRIMA Consult', price: 999, subtitle: 'For All Ages (Newborns to Seniors)', img: 'https://i.imgur.com/nbolBBP.png', ageLimit: 'Newborns to Seniors', benefits: ['Unlimited Consultations (PCC)', 'Annual Check Up (Basic 5)', 'No Medical Exam', 'Pre-existing covered'] },
-            { id: 'prima_access', name: 'PRIMA Access', price: 9999, subtitle: 'For All Ages (Newborns to Seniors)', img: 'https://i.imgur.com/ivnmS0Y.png', ageLimit: 'Newborns to Seniors', benefits: ['Unli Consult (PCC)', '24 Set A Lab Tests', '2x X-Ray & ECG, 1x UTZ', 'Pre-existing covered'] },
-            { id: 'prima_elite', name: 'PRIMA Elite', price: 19999, subtitle: 'Total Care', img: 'https://i.imgur.com/BN8IXcT.png', ageLimit: 'Newborns to Seniors', benefits: ['Unli Consult & Labs', 'Choice of 3 Adv. Diagnostics', 'Pre-existing covered'] }
+            { id: 'prima_consult', name: 'PRIMA Consult', price: 999, subtitle: 'Unli Consultations For All Ages', img: 'https://i.imgur.com/nbolBBP.png', ageLimit: 'Newborns to Seniors', benefits: ['Unlimited Consultations (PCC)', 'Annual Check Up (Basic 5)', 'Pre-existing covered'] },
+            { id: 'prima_access', name: 'PRIMA Access', price: 9999, subtitle: 'Unli Consultations + Labs For All Ages', img: 'https://i.imgur.com/ivnmS0Y.png', ageLimit: 'Newborns to Seniors', benefits: ['Unli Consult (PCC)', 'Annual Check Up (Basic 5)','24 Set A Lab Tests', '2x X-Ray & ECG, 1x UTZ', 'Pre-existing covered'] },
+            { id: 'prima_elite', name: 'PRIMA Elite', price: 19999, subtitle: 'Unli Consultations + Advanced Diagnostics', img: 'https://i.imgur.com/BN8IXcT.png', ageLimit: 'Newborns to Seniors', benefits: ['Unli Consult & Labs (PCC)', 'Annual Check Up (Basic 5)', '24 Set A Lab Tests, Xray, ECG','Choice of 3 Adv. Diagnostics', 'Pre-existing covered'] }
         ];
 
         const lifesaverProducts = [
@@ -1599,23 +1599,26 @@
 
                 return `
                 <div class="mymax-card product-card hover:scale-[1.01] transition-transform duration-300" style="background-image: url('${p.bg}');">
-                    <!-- Pricing Top Left (Adjusted Position & Responsive) -->
-                    <div class="absolute flex flex-col justify-center text-shadow" style="top: 15%; left: 6%; width: 85%; height: 25%;">
-                        <div class="mb-[1cqw]">
-                            <span class="card-annual-price">${valid ? formatCurrency(annualTotals[p.key]) : '₱--,--'}</span>
-                            <span class="card-price-label">/year</span>
-                        </div>
-                        <div class="flex items-baseline gap-[1.5cqw] mb-[1cqw]">
+                    <!-- Pricing Top Left (Adjusted Position & Responsive Structure) -->
+                    <div class="absolute flex flex-col text-shadow" style="top: 17%; left: 6%; width: 85%;">
+                        <!-- Used gap-[0.5cqw] for consistent tight spacing that scales -->
+                        <div class="flex flex-col gap-[0.5cqw] leading-none">
                             <div>
-                                <span class="card-semiannual-price text-gray-100">${valid ? formatCurrency(semiAnnualTotals[p.key]) : '₱--,--'}</span>
-                                <span class="card-price-label">/sem</span>
+                                <span class="card-annual-price">${valid ? formatCurrency(annualTotals[p.key]) : '₱--,--'}</span>
+                                <span class="card-price-label">/year</span>
                             </div>
-                            <div class="relative group">
-                                <span class="card-semiannual-price text-yellow-300 border-b border-dashed border-yellow-300/50 cursor-help">${valid ? formatMonthlyK(monthlyTotals[p.key]) : '₱--,--'}</span>
-                                <span class="card-price-label text-yellow-100">/mo*</span>
+                            <div class="flex items-baseline gap-[1.5cqw]">
+                                <div>
+                                    <span class="card-semiannual-price text-gray-100">${valid ? formatCurrency(semiAnnualTotals[p.key]) : '₱--,--'}</span>
+                                    <span class="card-price-label">/sem</span>
+                                </div>
+                                <div class="relative group">
+                                    <span class="card-semiannual-price text-yellow-300 border-b border-dashed border-yellow-300/50 cursor-help">${valid ? formatMonthlyK(monthlyTotals[p.key]) : '₱--,--'}</span>
+                                    <span class="card-price-label text-yellow-100">/mo*</span>
+                                </div>
                             </div>
+                            <div class="card-note">*Exclusive to BPI/Metro CC (12 mos)</div>
                         </div>
-                        <div class="card-note">*Exclusive to BPI/Metro CC (12 mos)</div>
                     </div>
 
                     <!-- Benefits Bottom Left (Responsive) -->
