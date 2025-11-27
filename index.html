@@ -463,7 +463,7 @@
                         <span class="highlight-tag bg-yellow-600">BEST SELLER</span>
                         <h4 class="font-bold text-slate-900 text-xl leading-tight">PRIMA Consult</h4>
                         <p class="text-blue-600 font-extrabold text-2xl my-1">₱999 <span class="text-xs font-medium text-slate-500">/ year</span></p>
-                        <p class="text-sm text-slate-600 leading-snug">Unli Consult & Labs (No Medical Exam)</p>
+                        <p class="text-sm text-slate-600 leading-snug">Unli Consult & APE (No Medical Exam)</p>
                          <span class="age-badge">Newborns to Seniors</span>
                     </div>
                 </div>
@@ -646,7 +646,17 @@
     <script>
         // --- AGENT DATABASE ---
         const agentDatabase = [
-            { code: "A469883", name: "JM Caballes", designation: "Health Benefit Consultant", mobile: "0953 423 0904", email: "maxicare@jmcaballes.life" },
+            { 
+                code: "A469883", 
+                name: "JM Caballes", 
+                designation: "Health Benefit Consultant", 
+                mobile: "0953 423 0904", 
+                email: "maxicare@jmcaballes.life",
+                website: "https://www.jmcaballes.life",
+                fb: "https://fb.com/jmcabalyes",
+                primaLink: "https://www.jmcaballes.life/prima",
+                lifesaverLink: "https://www.jmcaballes.life/lifesaver"
+            },
             { code: "AG002", name: "Juan Dela Cruz", designation: "Health Benefit Consultant", mobile: "0917 123 4567", email: "juan@maxicare.com.ph" },
             { code: "AG003", name: "Maria Clara", designation: "Financial Advisor", mobile: "0998 765 4321", email: "maria@maxicare.com.ph" }
         ];
@@ -674,6 +684,12 @@
                 advisor.designation = agent.designation;
                 advisor.contact = agent.mobile;
                 advisor.email = agent.email;
+                
+                // Populate extended info if available (with defaults)
+                advisor.website = agent.website || '';
+                advisor.fb = agent.fb || '';
+                advisor.primaLink = agent.primaLink || '';
+                advisor.lifesaverLink = agent.lifesaverLink || '';
 
                 // Update UI
                 updateAdvisorUI();
@@ -692,6 +708,8 @@
                 // Prefill Settings
                 document.getElementById('settings-website').value = advisor.website;
                 document.getElementById('settings-fb').value = advisor.fb;
+                document.getElementById('settings-prima').value = advisor.primaLink;
+                document.getElementById('settings-lifesaver').value = advisor.lifesaverLink;
             } else {
                 const errorMsg = document.getElementById('login-error');
                 errorMsg.classList.remove('hidden');
@@ -767,8 +785,8 @@
         // --- GLOBAL PRODUCT DATA ---
         const primaProducts = [
             { id: 'prima_consult', name: 'PRIMA Consult', price: 999, subtitle: 'For All Ages (Newborns to Seniors)', img: 'https://i.imgur.com/nbolBBP.png', ageLimit: 'Newborns to Seniors', benefits: ['Unlimited Consultations (PCC)', 'Annual Check Up (Basic 5)', 'No Medical Exam', 'Pre-existing covered'] },
-            { id: 'prima_access', name: 'PRIMA Access', price: 9999, subtitle: 'For All Ages (Newborns to Seniors)', img: 'https://i.imgur.com/ivnmS0Y.png', ageLimit: 'Newborns to Seniors', benefits: ['Unli Consult (PCC)', '24 Lab Tests included', 'X-Ray & Ultrasound', 'Pre-existing covered'] },
-            { id: 'prima_elite', name: 'PRIMA Elite', price: 19999, subtitle: 'Total Care', img: 'https://i.imgur.com/BN8IXcT.png', ageLimit: 'Newborns to Seniors', benefits: ['Unli Consult & Labs', 'Advanced Diagnostics (CT Scan/Ultrasound)', 'Pre-existing covered'] }
+            { id: 'prima_access', name: 'PRIMA Access', price: 9999, subtitle: 'For All Ages (Newborns to Seniors)', img: 'https://i.imgur.com/ivnmS0Y.png', ageLimit: 'Newborns to Seniors', benefits: ['Unli Consult (PCC)', '24 Set A Lab Tests', '2x X-Ray & ECG, 1x UTZ', 'Pre-existing covered'] },
+            { id: 'prima_elite', name: 'PRIMA Elite', price: 19999, subtitle: 'Total Care', img: 'https://i.imgur.com/BN8IXcT.png', ageLimit: 'Newborns to Seniors', benefits: ['Unli Consult & Labs', 'Choice of 3 Adv. Diagnostics', 'Pre-existing covered'] }
         ];
 
         const lifesaverProducts = [
@@ -782,7 +800,7 @@
                 details: `<h4 class="font-bold mb-2 text-base text-slate-800">What's Included:</h4><ul><li><b>Unlimited Consultations</b> with a wide range of PCC specialists (IM, Pedia, OB-Gyne, ENT, etc.).</li><li><b>Annual Check Up (Basic 5):</b> Physical Exam, CBC, Urinalysis, Fecalysis, and Chest X-ray.</li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Key Features:</h4><ul><li><b>No Paperwork, No Preliminary Checkups.</b></li><li>Pre-existing conditions are welcome for consultation.</li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Exclusions:</h4><ul><li>Psychiatry consultations (out-of-pocket).</li><li>Hospital admission or confinement & Emergency cases.</li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Who is this For?</h4><p>Individuals who need affordable and regular access to doctor consultations.</p>`
             },
             prima_access: {
-                details: `<h4 class="font-bold mb-2 text-base text-slate-800">What's Included:</h4><ul><li><b>Unlimited Consultations</b> with PCC specialists.</li><li><b>Annual Check Up (Basic 5)</b>.</li><li class="benefit-highlight"><b>Diagnostics & Labs (Outpatient):</b><ul class="!pl-4"><li><b>24</b> Laboratory Tests (Set A).</li><li><b>2x</b> Chest X-Ray (PA).</li><li><b>2x</b> ECG.</li><li><b>1x</b> Ultrasound.</li></ul></li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Key Features:</h4><ul><li>Includes access to preferential rates for other tests.</li><li>Pre-existing conditions covered.</li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Who is this For?</h4><p>People who require more than just consultations, including regular lab work and diagnostics.</p>`
+                details: `<h4 class="font-bold mb-2 text-base text-slate-800">What's Included:</h4><ul><li><b>Unlimited Consultations</b> with PCC specialists.</li><li><b>Annual Check Up (Basic 5)</b>.</li><li class="benefit-highlight"><b>Diagnostics & Labs (Outpatient):</b><ul class="!pl-4"><li><b>24</b> Set A Laboratory Tests.</li><li><b>2x</b> Chest X-Ray (PA).</li><li><b>2x</b> ECG.</li><li><b>1x</b> Ultrasound.</li></ul></li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Key Features:</h4><ul><li>Includes access to preferential rates for other tests.</li><li>Pre-existing conditions covered.</li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Who is this For?</h4><p>People who require more than just consultations, including regular lab work and diagnostics.</p>`
             },
             prima_elite: {
                 details: `<h4 class="font-bold mb-2 text-base text-slate-800">What's Included:</h4><ul><li><b>Unlimited Consultations</b> with PCC specialists.</li><li><b>Annual Check Up (Basic 5)</b>.</li><li class="benefit-highlight"><b>Unlimited</b> Set A Laboratory Tests, X-rays, and ECGs.</li><li class="benefit-highlight"><b>Advanced Diagnostics:</b> Choice of any <b>three (3)</b> per year: Ultrasound, 2D Echo, Treadmill Stress Test, or CT Scan.</li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Key Features:</h4><ul><li>The ultimate outpatient plan with advanced diagnostics.</li></ul><h4 class="font-bold mt-4 mb-2 text-base text-slate-800">Who is this For?</h4><p>Those who seek the most comprehensive outpatient care.</p>`
@@ -1046,7 +1064,7 @@
                                 <tr class="border-b border-slate-100 hover:bg-slate-50">
                                     <td class="py-2 pl-2 font-bold text-slate-700 text-xs">Lab Tests</td>
                                     <td class="py-2 text-center text-xs text-slate-600">ACU Basic 5</td>
-                                    <td class="py-2 text-center text-xs text-slate-600">ACU + 24 Tests</td>
+                                    <td class="py-2 text-center text-xs text-slate-600">ACU + 24 Set A Tests</td>
                                     <td class="py-2 text-center text-xs text-slate-600">Unlimited (Set A)</td>
                                 </tr>
                                 <tr class="border-b border-slate-100 hover:bg-slate-50">
